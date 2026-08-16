@@ -40,20 +40,24 @@ async def upload_document(
     rag_config = await kb_svc.get_active_rag_config(kb_id)
 
     ingestion = IngestionService(db, TEMP_TENANT_ID)
-    doc = await ingestion.ingest_document(
-        kb=kb,
-        title=doc_title,
-        content=content,
-        filename=file.filename or "document",
-        mime_type=file.content_type,
-        embedding_provider=rag_config.embedding_provider if rag_config else "openai",
-        embedding_model=rag_config.embedding_model if rag_config else "text-embedding-3-small",
-        embedding_dims=rag_config.embedding_dimensions if rag_config else 1536,
-        chunk_strategy=rag_config.chunking_strategy if rag_config else "recursive",
-        chunk_size=rag_config.chunk_size if rag_config else 800,
-        chunk_overlap=rag_config.chunk_overlap if rag_config else 100,
-    )
+    try:
+        doc = await ingestion.ingest_document(
+            kb=kb,
+            title=doc_title,
+            content=content,
+            filename=file.filename or "document",
+            mime_type=file.content_type,
+            embedding_provider=rag_config.embedding_provider if rag_config else "openai",
+            embedding_model=rag_config.embedding_model if rag_config else "text-embedding-3-small",
+            embedding_dims=rag_config.embedding_dimensions if rag_config else 1536,
+            chunk_strategy=rag_config.chunking_strategy if rag_config else "recursive",
+            chunk_size=rag_config.chunk_size if rag_config else 800,
+            chunk_overlap=rag_config.chunk_overlap if rag_config else 100,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Ingestion failed: {e}")
 
+    await db.refresh(doc)
     return doc
 
 

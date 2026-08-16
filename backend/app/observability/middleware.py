@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import time
+import traceback
 
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 
 from app.observability.metrics import REQUEST_COUNT, REQUEST_LATENCY
 from app.observability.tracing import get_tracer
@@ -34,7 +35,11 @@ class ObservabilityMiddleware(BaseHTTPMiddleware):
             except Exception as e:
                 status = "500"
                 span.record_exception(e)
-                raise
+                traceback.print_exc()
+                response = JSONResponse(
+                    status_code=500,
+                    content={"detail": f"Internal server error: {type(e).__name__}"},
+                )
             finally:
                 duration = time.perf_counter() - start
                 REQUEST_COUNT.labels(method=method, endpoint=path_template, status_code=status).inc()

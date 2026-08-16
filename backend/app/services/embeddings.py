@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+import hashlib
+import struct
 from typing import Any
 
 import structlog
@@ -165,17 +167,47 @@ class LocalEmbedding(EmbeddingProvider):
         return embeddings.tolist()
 
 
+class MockEmbedding(EmbeddingProvider):
+    """Deterministic fake embeddings for local dev when no API key is available."""
+
+    def __init__(self, model: str = "mock-embedding", dims: int = 1536):
+        self._model = model
+        self._dims = dims
+
+    @property
+    def model_name(self) -> str:
+        return self._model
+
+    @property
+    def dimensions(self) -> int:
+        return self._dims
+
+    async def embed_texts(self, texts: list[str]) -> list[list[float]]:
+        return [self._deterministic_vector(t) for t in texts]
+
+    def _deterministic_vector(self, text: str) -> list[float]:
+        digest = hashlib.sha256(text.encode()).digest()
+        n_floats = self._dims
+        expanded = digest
+        while len(expanded) < n_floats * 4:
+            expanded += hashlib.sha256(expanded).digest()
+        raw = struct.unpack(f"<{n_floats}f", expanded[: n_floats * 4])
+        norm = max(sum(x * x for x in raw) ** 0.5, 1e-9)
+        return [x / norm for x in raw]
+
+
 PROVIDER_MAP: dict[str, type[EmbeddingProvider]] = {
     "openai": OpenAIEmbedding,
     "cohere": CohereEmbedding,
     "local": LocalEmbedding,
+    "mock": MockEmbedding,
 }
 
-# Default models and dimensions per provider
 PROVIDER_DEFAULTS: dict[str, dict[str, Any]] = {
     "openai": {"model": "text-embedding-3-small", "dims": 1536},
     "cohere": {"model": "embed-english-v3.0", "dims": 1024},
     "local": {"model": "all-MiniLM-L6-v2", "dims": 384},
+    "mock": {"model": "mock-embedding", "dims": 1536},
 }
 
 
@@ -184,6 +216,11 @@ def get_embedding_provider(
     model: str | None = None,
     dimensions: int | None = None,
 ) -> EmbeddingProvider:
+    settings = get_settings()
+    if provider == "openai" and not settings.openai_api_key:
+        logger.warning("No OPENAI_API_KEY set, falling back to mock embeddings")
+        provider = "mock"
+
     cls = PROVIDER_MAP.get(provider)
     if not cls:
         raise ValueError(f"Unknown embedding provider: {provider}. Options: {list(PROVIDER_MAP)}")
