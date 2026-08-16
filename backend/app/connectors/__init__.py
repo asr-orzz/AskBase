@@ -5,10 +5,16 @@ from typing import Any
 from app.connectors.base import BaseConnector, ChangeOperation, DiscoveredItem, DocumentEvent
 from app.connectors.file_connector import FileConnector
 from app.connectors.s3_connector import S3Connector
+from app.connectors.github_connector import GitHubConnector
+from app.connectors.postgres_connector import PostgresConnector
+from app.connectors.rest_connector import RESTConnector
 
 CONNECTOR_REGISTRY: dict[str, type[BaseConnector]] = {
     "file": FileConnector,
     "s3": S3Connector,
+    "github": GitHubConnector,
+    "postgresql": PostgresConnector,
+    "rest_api": RESTConnector,
 }
 
 
@@ -30,6 +36,9 @@ __all__ = [
     "DocumentEvent",
     "FileConnector",
     "S3Connector",
+    "GitHubConnector",
+    "PostgresConnector",
+    "RESTConnector",
     "get_connector",
     "CONNECTOR_REGISTRY",
 ]
