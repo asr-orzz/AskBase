@@ -224,3 +224,24 @@ def run_evaluation(self, evaluation_run_id: str, tenant_id: str):
             }
 
     return run_async(_run())
+
+
+@celery_app.task(bind=True, name="app.workers.tasks.run_experiment_task", max_retries=1)
+def run_experiment_task(self, experiment_id: str, tenant_id: str):
+    """Run an A/B experiment: evaluate both variants and compare."""
+
+    async def _run():
+        from app.core.database import async_session_factory
+        from app.evaluation.experiment_runner import ExperimentRunner
+
+        async with async_session_factory() as db:
+            runner = ExperimentRunner(db, uuid.UUID(tenant_id))
+            result = await runner.run(uuid.UUID(experiment_id))
+            await db.commit()
+            return {
+                "status": result.status.value,
+                "winner": result.winner,
+                "results": result.results,
+            }
+
+    return run_async(_run())
