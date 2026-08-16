@@ -1,5 +1,3 @@
-version: "3.9"
-
 x-backend-env: &backend-env
   DATABASE_URL: postgresql+asyncpg://ragops:ragops@postgres:5432/ragops
   DATABASE_SYNC_URL: postgresql://ragops:ragops@postgres:5432/ragops
@@ -26,7 +24,7 @@ services:
       POSTGRES_USER: ragops
       POSTGRES_PASSWORD: ragops
       POSTGRES_DB: ragops
-    ports: ["5432:5432"]
+    ports: ["5433:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ragops"]

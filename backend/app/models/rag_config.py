@@ -38,7 +38,7 @@ class RAGConfig(BaseModel, TenantMixin):
 
     # Chunking
     chunking_strategy: Mapped[ChunkingStrategy] = mapped_column(
-        SAEnum(ChunkingStrategy, name="chunking_strategy"),
+        SAEnum(ChunkingStrategy, values_callable=lambda e: [x.value for x in e], name="chunking_strategy"),
         default=ChunkingStrategy.RECURSIVE,
         nullable=False,
     )
@@ -52,7 +52,7 @@ class RAGConfig(BaseModel, TenantMixin):
 
     # Retrieval
     retrieval_mode: Mapped[RetrievalMode] = mapped_column(
-        SAEnum(RetrievalMode, name="retrieval_mode"),
+        SAEnum(RetrievalMode, values_callable=lambda e: [x.value for x in e], name="retrieval_mode"),
         default=RetrievalMode.HYBRID,
         nullable=False,
     )

@@ -28,7 +28,7 @@ class Experiment(BaseModel, TenantMixin):
         UUID(as_uuid=True), ForeignKey("evaluation_datasets.id", ondelete="CASCADE"), nullable=False
     )
     status: Mapped[ExperimentStatus] = mapped_column(
-        SAEnum(ExperimentStatus, name="experiment_status"),
+        SAEnum(ExperimentStatus, values_callable=lambda e: [x.value for x in e], name="experiment_status"),
         default=ExperimentStatus.DRAFT,
         nullable=False,
     )

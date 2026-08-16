@@ -39,7 +39,7 @@ class Document(BaseModel, TenantMixin):
     file_size: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
     version: Mapped[int] = mapped_column(default=1)
     status: Mapped[DocumentStatus] = mapped_column(
-        SAEnum(DocumentStatus, name="document_status"), default=DocumentStatus.PENDING, nullable=False
+        SAEnum(DocumentStatus, values_callable=lambda e: [x.value for x in e], name="document_status"), default=DocumentStatus.PENDING, nullable=False
     )
     metadata_: Mapped[dict[str, Any]] = mapped_column(
         "metadata", JSONB, default=dict, nullable=False

@@ -38,12 +38,12 @@ class DataSource(BaseModel, TenantMixin):
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     source_type: Mapped[SourceType] = mapped_column(
-        SAEnum(SourceType, name="source_type"), nullable=False
+        SAEnum(SourceType, values_callable=lambda e: [x.value for x in e], name="source_type"), nullable=False
     )
     config: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, nullable=False)
     credentials: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
     sync_status: Mapped[SyncStatus] = mapped_column(
-        SAEnum(SyncStatus, name="sync_status"), default=SyncStatus.IDLE, nullable=False
+        SAEnum(SyncStatus, values_callable=lambda e: [x.value for x in e], name="sync_status"), default=SyncStatus.IDLE, nullable=False
     )
     last_synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     sync_error: Mapped[str | None] = mapped_column(Text, nullable=True)

@@ -31,7 +31,8 @@ class KnowledgeBase(BaseModel, TenantMixin):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     status: Mapped[KBStatus] = mapped_column(
-        SAEnum(KBStatus, name="kb_status"), default=KBStatus.ACTIVE, nullable=False
+        SAEnum(KBStatus, values_callable=lambda e: [x.value for x in e], name="kb_status"),
+        default=KBStatus.ACTIVE, nullable=False,
     )
     document_count: Mapped[int] = mapped_column(Integer, default=0)
     chunk_count: Mapped[int] = mapped_column(Integer, default=0)

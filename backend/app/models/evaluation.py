@@ -60,7 +60,7 @@ class EvaluationRun(BaseModel, TenantMixin):
         UUID(as_uuid=True), ForeignKey("rag_configs.id", ondelete="CASCADE"), nullable=False
     )
     status: Mapped[EvalStatus] = mapped_column(
-        SAEnum(EvalStatus, name="eval_status"), default=EvalStatus.PENDING, nullable=False
+        SAEnum(EvalStatus, values_callable=lambda e: [x.value for x in e], name="eval_status"), default=EvalStatus.PENDING, nullable=False
     )
 
     # Aggregate metrics

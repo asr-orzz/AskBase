@@ -30,10 +30,10 @@ class Deployment(BaseModel, TenantMixin):
         UUID(as_uuid=True), ForeignKey("rag_configs.id", ondelete="CASCADE"), nullable=False
     )
     environment: Mapped[DeploymentEnv] = mapped_column(
-        SAEnum(DeploymentEnv, name="deployment_env"), nullable=False
+        SAEnum(DeploymentEnv, values_callable=lambda e: [x.value for x in e], name="deployment_env"), nullable=False
     )
     status: Mapped[DeploymentStatus] = mapped_column(
-        SAEnum(DeploymentStatus, name="deployment_status"),
+        SAEnum(DeploymentStatus, values_callable=lambda e: [x.value for x in e], name="deployment_status"),
         default=DeploymentStatus.ACTIVE,
         nullable=False,
     )

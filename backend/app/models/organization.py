@@ -51,7 +51,7 @@ class OrganizationMember(BaseModel):
         UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     role: Mapped[OrgRole] = mapped_column(
-        SAEnum(OrgRole, name="org_role"), default=OrgRole.DEVELOPER, nullable=False
+        SAEnum(OrgRole, values_callable=lambda e: [x.value for x in e], name="org_role"), default=OrgRole.DEVELOPER, nullable=False
     )
 
     organization: Mapped["Organization"] = relationship(back_populates="members")

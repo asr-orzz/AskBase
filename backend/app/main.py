@@ -23,7 +23,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     setup_tracing(
         service_name="ragops-api",
         otlp_endpoint=getattr(settings, "otlp_endpoint", None),
-        console_export=settings.debug,
+        console_export=False,
     )
     APP_INFO.info({"version": "0.1.0", "env": settings.app_env})
 
