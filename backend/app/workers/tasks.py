@@ -204,7 +204,23 @@ def reindex_knowledge_base(self, knowledge_base_id: str, tenant_id: str):
     return run_async(_reindex())
 
 
-@celery_app.task(name="app.workers.tasks.run_evaluation")
-def run_evaluation(evaluation_run_id: str, tenant_id: str):
-    """Placeholder — implemented in Commit 21."""
-    return {"status": "pending", "run_id": evaluation_run_id}
+@celery_app.task(bind=True, name="app.workers.tasks.run_evaluation", max_retries=1)
+def run_evaluation(self, evaluation_run_id: str, tenant_id: str):
+    """Run a full evaluation: iterate dataset items through the RAG pipeline, compute metrics."""
+
+    async def _run():
+        from app.core.database import async_session_factory
+        from app.evaluation.runner import EvaluationRunner
+
+        async with async_session_factory() as db:
+            runner = EvaluationRunner(db, uuid.UUID(tenant_id))
+            result = await runner.run(uuid.UUID(evaluation_run_id))
+            await db.commit()
+            return {
+                "status": result.status.value,
+                "recall_at_k": result.recall_at_k,
+                "faithfulness": result.faithfulness,
+                "answer_relevance": result.answer_relevance,
+            }
+
+    return run_async(_run())
