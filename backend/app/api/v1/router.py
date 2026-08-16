@@ -1,5 +1,8 @@
 from fastapi import APIRouter
 
+from app.api.v1.knowledge_bases import router as kb_router
+from app.api.v1.query import router as query_router
+
 router = APIRouter()
 
 
@@ -10,3 +13,7 @@ async def health_check():
         "service": "ragops-api",
         "version": "0.1.0",
     }
+
+
+router.include_router(kb_router)
+router.include_router(query_router)
