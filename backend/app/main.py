@@ -8,6 +8,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import router as v1_router
 from app.core.config import get_settings
 from app.core.logging import setup_logging
+from app.observability.tracing import setup_tracing
+from app.observability.middleware import ObservabilityMiddleware
+from app.observability.metrics import APP_INFO
 
 logger = structlog.get_logger()
 
@@ -16,6 +19,14 @@ logger = structlog.get_logger()
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     setup_logging()
     settings = get_settings()
+
+    setup_tracing(
+        service_name="ragops-api",
+        otlp_endpoint=getattr(settings, "otlp_endpoint", None),
+        console_export=settings.debug,
+    )
+    APP_INFO.info({"version": "0.1.0", "env": settings.app_env})
+
     await logger.ainfo(
         "Starting RAGOps",
         env=settings.app_env,
@@ -37,6 +48,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
 
+    app.add_middleware(ObservabilityMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:3000"] if not settings.is_production else [],
