@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from app.api.v1.knowledge_bases import router as kb_router
 from app.api.v1.query import router as query_router
+from app.api.v1.documents import router as docs_router
 
 router = APIRouter()
 
@@ -17,3 +18,4 @@ async def health_check():
 
 router.include_router(kb_router)
 router.include_router(query_router)
+router.include_router(docs_router)
