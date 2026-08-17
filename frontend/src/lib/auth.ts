@@ -1,19 +1,10 @@
 import type { NextAuthOptions } from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    ...(process.env.GOOGLE_CLIENT_ID
-      ? [
-          GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
-          }),
-        ]
-      : []),
     CredentialsProvider({
       name: "Email",
       credentials: {
@@ -53,27 +44,6 @@ export const authOptions: NextAuthOptions = {
   ],
 
   callbacks: {
-    async signIn({ user, account }) {
-      if (account?.provider === "google") {
-        const res = await fetch(`${API_BASE}/auth/google`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: user.email,
-            name: user.name,
-            google_id: account.providerAccountId,
-          }),
-        });
-
-        if (!res.ok) return false;
-
-        const data = await res.json();
-        (user as any).backendToken = data.token;
-        (user as any).id = data.user.id;
-      }
-      return true;
-    },
-
     async jwt({ token, user }) {
       if (user) {
         token.backendToken = (user as any).backendToken;

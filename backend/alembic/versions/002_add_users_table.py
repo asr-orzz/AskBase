@@ -17,7 +17,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    auth_provider = postgresql.ENUM("email", "google", name="auth_provider", create_type=False)
+    auth_provider = postgresql.ENUM("email", name="auth_provider", create_type=False)
     auth_provider.create(op.get_bind(), checkfirst=True)
 
     op.create_table(
@@ -25,9 +25,8 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True),
         sa.Column("email", sa.String(255), unique=True, nullable=False, index=True),
         sa.Column("name", sa.String(255), nullable=True),
-        sa.Column("password_hash", sa.String(255), nullable=True),
+        sa.Column("password_hash", sa.String(255), nullable=False),
         sa.Column("auth_provider", auth_provider, nullable=False, server_default="email"),
-        sa.Column("google_id", sa.String(255), nullable=True, unique=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
     )

@@ -26,12 +26,6 @@ class LoginRequest(BaseModel):
     password: str
 
 
-class GoogleAuthRequest(BaseModel):
-    email: EmailStr
-    name: str | None = None
-    google_id: str
-
-
 class UserResponse(BaseModel):
     id: str
     email: str
@@ -101,30 +95,6 @@ async def login(data: LoginRequest, db: DatabaseSession):
 
     if not _verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-
-    return AuthResponse(user=UserResponse.from_user(user), token=_create_token(user))
-
-
-@router.post("/google", response_model=AuthResponse)
-async def google_auth(data: GoogleAuthRequest, db: DatabaseSession):
-    result = await db.execute(select(User).where(User.email == data.email))
-    user = result.scalar_one_or_none()
-
-    if not user:
-        user = User(
-            email=data.email,
-            name=data.name,
-            auth_provider=AuthProvider.GOOGLE,
-            google_id=data.google_id,
-        )
-        db.add(user)
-        await db.flush()
-        await db.refresh(user)
-        await logger.ainfo("Google user created", user_id=str(user.id), email=data.email)
-    else:
-        if not user.google_id:
-            user.google_id = data.google_id
-            await db.flush()
 
     return AuthResponse(user=UserResponse.from_user(user), token=_create_token(user))
 
