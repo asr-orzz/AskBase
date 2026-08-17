@@ -4,12 +4,12 @@ import { useState } from "react";
 import { Send, Bot, User, FileText, Clock, Coins } from "lucide-react";
 import { useKnowledgeBases, useRAGQuery } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
-import type { ChunkResult } from "@/lib/types";
+import type { ChunkResponse } from "@/lib/types";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
-  chunks?: ChunkResult[];
+  chunks?: ChunkResponse[];
   metadata?: {
     model: string;
     tokens: number;
@@ -22,7 +22,7 @@ export default function PlaygroundPage() {
   const [selectedKb, setSelectedKb] = useState("");
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
-  const [activeChunks, setActiveChunks] = useState<ChunkResult[]>([]);
+  const [activeChunks, setActiveChunks] = useState<ChunkResponse[]>([]);
 
   const queryMutation = useRAGQuery(selectedKb);
 

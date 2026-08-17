@@ -44,7 +44,7 @@ class RAGResult:
 class RAGPipelineConfig:
     collection_name: str
     top_k: int = 10
-    similarity_threshold: float = 0.7
+    similarity_threshold: float = 0.3
     temperature: float = 0.1
     max_tokens: int = 2048
     system_prompt: str | None = None

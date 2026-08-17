@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Upload, FileText, Trash2, ArrowLeft, CheckCircle, XCircle, Clock, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-const STATUS_ICON = {
+const STATUS_ICON: Record<string, typeof Clock> = {
   pending: Clock,
   processing: Loader2,
   indexed: CheckCircle,
@@ -14,7 +14,7 @@ const STATUS_ICON = {
   deleted: XCircle,
 };
 
-const STATUS_COLOR = {
+const STATUS_COLOR: Record<string, string> = {
   pending: "text-zinc-400",
   processing: "text-amber-400 animate-spin",
   indexed: "text-emerald-400",

@@ -1,10 +1,9 @@
 import uuid
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
 
 from app.core.dependencies import DatabaseSession
-from app.rag.pipeline import RAGPipeline, RAGPipelineConfig, RetrievedChunk
+from app.rag.pipeline import RAGPipeline, RAGPipelineConfig
 from app.schemas.rag import ChunkResponse, RAGQueryRequest, RAGQueryResponse
 from app.services.embeddings import get_embedding_provider
 from app.services.knowledge_base import KnowledgeBaseService
@@ -27,17 +26,8 @@ async def query_knowledge_base(
     if not kb:
         raise HTTPException(status_code=404, detail="Knowledge base not found")
 
-    rag_config = await svc.get_active_rag_config(kb_id)
-
-    embedding = get_embedding_provider(
-        provider=rag_config.embedding_provider if rag_config else "openai",
-        model=rag_config.embedding_model if rag_config else None,
-        dimensions=rag_config.embedding_dimensions if rag_config else None,
-    )
-    llm = get_llm_provider(
-        provider=rag_config.llm_provider if rag_config else "openai",
-        model=rag_config.llm_model if rag_config else None,
-    )
+    embedding = get_embedding_provider()
+    llm = get_llm_provider()
 
     pipeline = RAGPipeline(
         vector_store=get_vector_store(),
@@ -51,15 +41,7 @@ async def query_knowledge_base(
         similarity_threshold=request.similarity_threshold,
         temperature=request.temperature,
         max_tokens=request.max_tokens,
-        system_prompt=rag_config.system_prompt if rag_config else None,
-        filters=request.filters,
     )
-
-    if request.stream:
-        return StreamingResponse(
-            _stream_response(pipeline, request.question, config),
-            media_type="text/event-stream",
-        )
 
     result = await pipeline.query(request.question, config)
 
@@ -82,23 +64,3 @@ async def query_knowledge_base(
         retrieval_latency_ms=result.retrieval_latency_ms,
         total_latency_ms=result.total_latency_ms,
     )
-
-
-async def _stream_response(pipeline: RAGPipeline, question: str, config: RAGPipelineConfig):
-    """SSE stream: sends sources first, then LLM tokens."""
-    import json
-
-    async for item in pipeline.stream_query(question, config):
-        if isinstance(item, RetrievedChunk):
-            data = json.dumps({
-                "type": "source",
-                "chunk_id": item.chunk_id,
-                "document_title": item.document_title,
-                "score": item.score,
-            })
-            yield f"data: {data}\n\n"
-        else:
-            data = json.dumps({"type": "token", "content": item})
-            yield f"data: {data}\n\n"
-
-    yield "data: [DONE]\n\n"

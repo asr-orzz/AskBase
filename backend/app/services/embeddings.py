@@ -167,6 +167,46 @@ class LocalEmbedding(EmbeddingProvider):
         return embeddings.tolist()
 
 
+class GoogleEmbedding(EmbeddingProvider):
+    """Google Gemini embedding provider."""
+
+    def __init__(self, model: str = "gemini-embedding-001", dims: int = 3072):
+        from google import genai
+
+        settings = get_settings()
+        self._client = genai.Client(api_key=settings.google_api_key)
+        self._model = model
+        self._dims = dims
+
+    @property
+    def model_name(self) -> str:
+        return self._model
+
+    @property
+    def dimensions(self) -> int:
+        return self._dims
+
+    @retry(stop=stop_after_attempt(3), wait=wait_exponential(min=1, max=10))
+    async def embed_texts(self, texts: list[str]) -> list[list[float]]:
+        all_embeddings: list[list[float]] = []
+        batch_size = 100
+
+        for i in range(0, len(texts), batch_size):
+            batch = texts[i : i + batch_size]
+            response = await self._client.aio.models.embed_content(
+                model=self._model,
+                contents=batch,
+            )
+            all_embeddings.extend([e.values for e in response.embeddings])
+            await logger.adebug(
+                "Google embedding batch",
+                batch_index=i // batch_size,
+                count=len(batch),
+            )
+
+        return all_embeddings
+
+
 class MockEmbedding(EmbeddingProvider):
     """Deterministic fake embeddings for local dev when no API key is available."""
 
@@ -199,6 +239,7 @@ class MockEmbedding(EmbeddingProvider):
 PROVIDER_MAP: dict[str, type[EmbeddingProvider]] = {
     "openai": OpenAIEmbedding,
     "cohere": CohereEmbedding,
+    "google": GoogleEmbedding,
     "local": LocalEmbedding,
     "mock": MockEmbedding,
 }
@@ -206,8 +247,9 @@ PROVIDER_MAP: dict[str, type[EmbeddingProvider]] = {
 PROVIDER_DEFAULTS: dict[str, dict[str, Any]] = {
     "openai": {"model": "text-embedding-3-small", "dims": 1536},
     "cohere": {"model": "embed-english-v3.0", "dims": 1024},
+    "google": {"model": "gemini-embedding-001", "dims": 3072},
     "local": {"model": "all-MiniLM-L6-v2", "dims": 384},
-    "mock": {"model": "mock-embedding", "dims": 1536},
+    "mock": {"model": "mock-embedding", "dims": 3072},
 }
 
 
@@ -218,8 +260,14 @@ def get_embedding_provider(
 ) -> EmbeddingProvider:
     settings = get_settings()
     if provider == "openai" and not settings.openai_api_key:
-        logger.warning("No OPENAI_API_KEY set, falling back to mock embeddings")
-        provider = "mock"
+        if settings.google_api_key:
+            logger.warning("No OPENAI_API_KEY, falling back to Google embeddings")
+            provider = "google"
+            model = None
+            dimensions = None
+        else:
+            logger.warning("No API keys set, falling back to mock embeddings")
+            provider = "mock"
 
     cls = PROVIDER_MAP.get(provider)
     if not cls:
@@ -227,6 +275,6 @@ def get_embedding_provider(
 
     defaults = PROVIDER_DEFAULTS.get(provider, {})
     model = model or defaults.get("model", "")
-    dimensions = dimensions or defaults.get("dims", 1536)
+    dimensions = dimensions or defaults.get("dims", 3072)
 
     return cls(model=model, dims=dimensions)

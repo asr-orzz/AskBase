@@ -1,91 +1,65 @@
 # RAGOps
 
-**A production platform for building, deploying, evaluating, and operating continuously updated RAG applications from configurable data sources.**
+Upload documents and query them with AI. Built with FastAPI, Next.js, PostgreSQL, Qdrant, and Google Gemini.
 
-## Architecture
+## Features
 
-```
-Control Plane (FastAPI)          Data Plane
-├── Knowledge Base Service       ├── Connectors (GitHub, S3, Postgres, REST)
-├── RAG Configuration            ├── Kafka Event Streaming
-├── Evaluation Service           ├── Stream Processing
-├── Experiment Service           ├── Chunking + Embedding
-└── Deployment Service           └── Vector Indexing (Qdrant)
+- Upload PDF, DOCX, TXT, MD, HTML documents
+- Automatic chunking and vector embedding
+- Query documents with natural language
+- Powered by Google Gemini (embeddings + LLM)
+- Simple, clean UI
 
-Observability                    Infrastructure
-├── OpenTelemetry                ├── PostgreSQL
-├── Prometheus + Grafana         ├── Qdrant
-├── Loki (Logs)                  ├── Redis
-├── Tempo (Traces)               ├── Kafka
-└── Cost Tracking                └── MinIO / S3
-```
+## Quick Start (Local)
 
-## Tech Stack
+### Prerequisites
+- Python 3.11+, Node.js 18+
+- PostgreSQL, Qdrant (or use Docker)
+- Google API key from [AI Studio](https://aistudio.google.com/apikey)
 
-| Layer             | Technology               |
-|-------------------|--------------------------|
-| Frontend          | Next.js + TypeScript     |
-| UI                | Tailwind + shadcn/ui     |
-| Backend           | FastAPI + Python         |
-| Primary DB        | PostgreSQL               |
-| Vector DB         | Qdrant                   |
-| Object Storage    | S3 / MinIO               |
-| Streaming         | Kafka                    |
-| Background Jobs   | Celery + Redis           |
-| Workflow          | Temporal                 |
-| Cache             | Redis                    |
-| Tracing           | OpenTelemetry            |
-| Metrics           | Prometheus               |
-| Auth              | Keycloak                 |
-| Containers        | Docker + Kubernetes      |
-| CI/CD             | GitHub Actions           |
-
-## Project Structure
-
-```
-RAGops/
-├── backend/            # FastAPI application
-│   ├── app/
-│   │   ├── api/        # API routes
-│   │   ├── core/       # Config, security, dependencies
-│   │   ├── models/     # SQLAlchemy models
-│   │   ├── schemas/    # Pydantic schemas
-│   │   ├── services/   # Business logic
-│   │   ├── connectors/ # Data source connectors
-│   │   ├── rag/        # RAG engine (retrieval, reranking, generation)
-│   │   ├── evaluation/ # Evaluation & experiment framework
-│   │   └── workers/    # Background job workers
-│   ├── alembic/        # Database migrations
-│   ├── tests/          # Backend tests
-│   └── requirements.txt
-├── frontend/           # Next.js application
-├── docker/             # Dockerfiles
-├── k8s/                # Kubernetes manifests
-├── .github/            # CI/CD workflows
-└── docker-compose.yml
-```
-
-## Quick Start
-
+### 1. Start infrastructure
 ```bash
-# Clone
-git clone <repo-url>
-cd RAGops
+docker run -d --name postgres -e POSTGRES_USER=ragops -e POSTGRES_PASSWORD=ragops -e POSTGRES_DB=ragops -p 5432:5432 postgres:16-alpine
+docker run -d --name qdrant -p 6333:6333 -p 6334:6334 qdrant/qdrant
+```
 
-# Backend
+### 2. Backend
+```bash
 cd backend
-python -m venv .venv
-source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+python -m venv .venv && .venv/Scripts/activate  # Windows
 pip install -r requirements.txt
-cp .env.example .env
+cp .env.example .env  # Edit with your Google API key
+alembic upgrade head
 uvicorn app.main:app --reload
+```
 
-# Frontend
+### 3. Frontend
+```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-## Development
+Open http://localhost:3000
 
-See individual README files in `backend/` and `frontend/` for detailed setup instructions.
+## Deploy to Render (One-Click)
+
+1. Push this repo to GitHub
+2. Go to [Render Dashboard](https://dashboard.render.com)
+3. Click **New > Blueprint** and connect your repo
+4. Render reads `render.yaml` and creates all services
+5. Set environment variables:
+   - `GOOGLE_API_KEY` — your Google API key
+   - `QDRANT_URL` — your Qdrant Cloud URL (free at [cloud.qdrant.io](https://cloud.qdrant.io))
+   - `QDRANT_API_KEY` — your Qdrant Cloud API key
+   - `NEXT_PUBLIC_API_URL` — `https://ragops-api.onrender.com/api/v1`
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js, TypeScript, Tailwind CSS |
+| Backend | Python, FastAPI, SQLAlchemy |
+| Database | PostgreSQL |
+| Vector DB | Qdrant |
+| AI | Google Gemini (embeddings + LLM) |

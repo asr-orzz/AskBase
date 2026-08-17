@@ -10,8 +10,6 @@ import type {
   RAGQueryResponse,
 } from "./types";
 
-// --- Knowledge Bases ---
-
 export function useKnowledgeBases() {
   return useQuery<KnowledgeBaseList>({
     queryKey: ["knowledge-bases"],
@@ -43,8 +41,6 @@ export function useDeleteKnowledgeBase() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["knowledge-bases"] }),
   });
 }
-
-// --- Documents ---
 
 export function useDocuments(kbId: string) {
   return useQuery<DocumentList>({
@@ -84,15 +80,13 @@ export function useDeleteDocument(kbId: string) {
   });
 }
 
-// --- RAG Query ---
-
 export function useRAGQuery(kbId: string) {
   return useMutation({
     mutationFn: (question: string) =>
       api.post<RAGQueryResponse>(`/query/${kbId}`, {
         question,
         top_k: 10,
-        similarity_threshold: 0.7,
+        similarity_threshold: 0.3,
       }),
   });
 }

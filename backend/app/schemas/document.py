@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Any
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -10,9 +9,7 @@ from app.models.document import DocumentStatus
 class DocumentResponse(BaseModel):
     id: UUID
     knowledge_base_id: UUID
-    data_source_id: UUID | None
     title: str
-    source_url: str | None
     mime_type: str | None
     content_hash: str
     file_size: int | None

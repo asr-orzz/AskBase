@@ -8,9 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import router as v1_router
 from app.core.config import get_settings
 from app.core.logging import setup_logging
-from app.observability.tracing import setup_tracing
-from app.observability.middleware import ObservabilityMiddleware
-from app.observability.metrics import APP_INFO
 
 logger = structlog.get_logger()
 
@@ -19,19 +16,7 @@ logger = structlog.get_logger()
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     setup_logging()
     settings = get_settings()
-
-    setup_tracing(
-        service_name="ragops-api",
-        otlp_endpoint=getattr(settings, "otlp_endpoint", None),
-        console_export=False,
-    )
-    APP_INFO.info({"version": "0.1.0", "env": settings.app_env})
-
-    await logger.ainfo(
-        "Starting RAGOps",
-        env=settings.app_env,
-        debug=settings.debug,
-    )
+    await logger.ainfo("Starting RAGOps", env=settings.app_env, debug=settings.debug)
     yield
     await logger.ainfo("Shutting down RAGOps")
 
@@ -41,17 +26,16 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title=settings.app_name,
-        description="Production platform for building, deploying, evaluating, and operating RAG applications",
+        description="Upload documents and query them with AI",
         version="0.1.0",
-        docs_url="/docs" if not settings.is_production else None,
-        redoc_url="/redoc" if not settings.is_production else None,
+        docs_url="/docs",
+        redoc_url="/redoc",
         lifespan=lifespan,
     )
 
-    app.add_middleware(ObservabilityMiddleware)
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["http://localhost:3000"] if not settings.is_production else [],
+        allow_origins=["*"],
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -61,11 +45,7 @@ def create_app() -> FastAPI:
 
     @app.get("/")
     async def root():
-        return {
-            "name": settings.app_name,
-            "version": "0.1.0",
-            "docs": "/docs",
-        }
+        return {"name": settings.app_name, "version": "0.1.0", "docs": "/docs"}
 
     return app
 

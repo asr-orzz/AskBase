@@ -49,13 +49,19 @@ class VectorStore(ABC):
 class QdrantVectorStore(VectorStore):
     def __init__(self) -> None:
         settings = get_settings()
-        self.client = QdrantClient(
-            host=settings.qdrant_host,
-            port=settings.qdrant_port,
-            api_key=settings.qdrant_api_key or None,
-            prefer_grpc=True,
-            grpc_port=settings.qdrant_grpc_port,
-        )
+        if settings.qdrant_url:
+            self.client = QdrantClient(
+                url=settings.qdrant_url,
+                api_key=settings.qdrant_api_key or None,
+            )
+        else:
+            self.client = QdrantClient(
+                host=settings.qdrant_host,
+                port=settings.qdrant_port,
+                api_key=settings.qdrant_api_key or None,
+                prefer_grpc=True,
+                grpc_port=settings.qdrant_grpc_port,
+            )
 
     async def create_collection(self, name: str, dimension: int) -> None:
         try:
