@@ -4,6 +4,7 @@ import uuid
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 
+from app.auth.dependencies import CurrentUser
 from app.core.dependencies import DatabaseSession
 from app.schemas.document import DocumentResponse, DocumentList
 from app.services.ingestion import IngestionService
@@ -11,7 +12,6 @@ from app.services.knowledge_base import KnowledgeBaseService
 
 router = APIRouter(prefix="/knowledge-bases/{kb_id}/documents", tags=["Documents"])
 
-TEMP_TENANT_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 MAX_FILE_SIZE = 50 * 1024 * 1024
 
 
@@ -19,10 +19,11 @@ MAX_FILE_SIZE = 50 * 1024 * 1024
 async def list_documents(
     kb_id: uuid.UUID,
     db: DatabaseSession,
+    user: CurrentUser,
     skip: int = 0,
     limit: int = 50,
 ):
-    svc = KnowledgeBaseService(db, TEMP_TENANT_ID)
+    svc = KnowledgeBaseService(db, user.id)
     kb = await svc.get(kb_id)
     if not kb:
         raise HTTPException(status_code=404, detail="Knowledge base not found")
@@ -34,10 +35,11 @@ async def list_documents(
 async def upload_document(
     kb_id: uuid.UUID,
     db: DatabaseSession,
+    user: CurrentUser,
     file: UploadFile = File(...),
     title: str | None = Form(None),
 ):
-    kb_svc = KnowledgeBaseService(db, TEMP_TENANT_ID)
+    kb_svc = KnowledgeBaseService(db, user.id)
     kb = await kb_svc.get(kb_id)
     if not kb:
         raise HTTPException(status_code=404, detail="Knowledge base not found")
@@ -50,7 +52,7 @@ async def upload_document(
 
     doc_title = title or file.filename or "Untitled"
 
-    ingestion = IngestionService(db, TEMP_TENANT_ID)
+    ingestion = IngestionService(db, user.id)
     try:
         doc = await ingestion.ingest_document(
             kb=kb,
@@ -71,13 +73,14 @@ async def delete_document(
     kb_id: uuid.UUID,
     doc_id: uuid.UUID,
     db: DatabaseSession,
+    user: CurrentUser,
 ):
     from sqlalchemy import select
     from app.models.document import Document
     from app.models.chunk import Chunk
     from app.services.vector_store import get_vector_store
 
-    kb_svc = KnowledgeBaseService(db, TEMP_TENANT_ID)
+    kb_svc = KnowledgeBaseService(db, user.id)
     kb = await kb_svc.get(kb_id)
     if not kb:
         raise HTTPException(status_code=404, detail="Knowledge base not found")

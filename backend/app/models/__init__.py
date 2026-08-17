@@ -1,4 +1,5 @@
 from app.models.base import Base, BaseModel, TenantMixin, TimestampMixin
+from app.models.user import User, AuthProvider
 from app.models.knowledge_base import KnowledgeBase, KBStatus
 from app.models.document import Document, DocumentStatus
 from app.models.chunk import Chunk
@@ -8,6 +9,8 @@ __all__ = [
     "BaseModel",
     "TenantMixin",
     "TimestampMixin",
+    "User",
+    "AuthProvider",
     "KnowledgeBase",
     "KBStatus",
     "Document",

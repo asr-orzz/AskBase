@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     qdrant_grpc_port: int = 6334
     qdrant_url: str = ""
 
+    # Auth
+    jwt_secret: str = "dev-secret-change-me"
+
     # LLM Providers
     openai_api_key: str = ""
     google_api_key: str = ""

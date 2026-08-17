@@ -2,6 +2,7 @@ import uuid
 
 from fastapi import APIRouter, HTTPException
 
+from app.auth.dependencies import CurrentUser
 from app.core.dependencies import DatabaseSession
 from app.rag.pipeline import RAGPipeline, RAGPipelineConfig
 from app.schemas.rag import ChunkResponse, RAGQueryRequest, RAGQueryResponse
@@ -12,16 +13,15 @@ from app.services.vector_store import get_vector_store
 
 router = APIRouter(prefix="/query", tags=["Query"])
 
-TEMP_TENANT_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
-
 
 @router.post("/{kb_id}", response_model=RAGQueryResponse)
 async def query_knowledge_base(
     kb_id: uuid.UUID,
     request: RAGQueryRequest,
     db: DatabaseSession,
+    user: CurrentUser,
 ):
-    svc = KnowledgeBaseService(db, TEMP_TENANT_ID)
+    svc = KnowledgeBaseService(db, user.id)
     kb = await svc.get(kb_id)
     if not kb:
         raise HTTPException(status_code=404, detail="Knowledge base not found")

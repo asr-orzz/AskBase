@@ -73,7 +73,6 @@ export default function KnowledgeBaseDetailPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* Upload zone */}
       <div
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
@@ -86,10 +85,7 @@ export default function KnowledgeBaseDetailPage({ params }: { params: Promise<{ 
         <Upload className="mx-auto h-8 w-8 text-zinc-600" />
         <p className="mt-2 text-sm text-zinc-400">
           Drag & drop files here, or{" "}
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="text-indigo-400 hover:underline"
-          >
+          <button onClick={() => fileInputRef.current?.click()} className="text-indigo-400 hover:underline">
             browse
           </button>
         </p>
@@ -107,7 +103,6 @@ export default function KnowledgeBaseDetailPage({ params }: { params: Promise<{ 
         )}
       </div>
 
-      {/* Documents table */}
       <div className="rounded-xl border border-zinc-800 bg-zinc-900/50">
         <div className="border-b border-zinc-800 px-6 py-4">
           <h2 className="text-sm font-medium text-white">Documents</h2>
