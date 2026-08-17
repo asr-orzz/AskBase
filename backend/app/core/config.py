@@ -30,6 +30,20 @@ class Settings(BaseSettings):
             url = url.replace("postgres://", "postgresql+asyncpg://", 1)
         elif url.startswith("postgresql://") and "+asyncpg" not in url:
             url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        if self.is_production and "sslmode" not in url:
+            sep = "&" if "?" in url else "?"
+            url += f"{sep}ssl=require"
+        return url
+
+    @computed_field
+    @property
+    def sync_database_url(self) -> str:
+        url = self.database_sync_url
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
+        if self.is_production and "sslmode" not in url:
+            sep = "&" if "?" in url else "?"
+            url += f"{sep}sslmode=require"
         return url
     db_pool_size: int = 20
     db_max_overflow: int = 10
