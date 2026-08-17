@@ -24,18 +24,6 @@ services:
       - key: QDRANT_API_KEY
         sync: false
 
-  # Frontend
-  - type: web
-    name: ragops-frontend
-    runtime: node
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    startCommand: npm start
-    envVars:
-      - key: NEXT_PUBLIC_API_URL
-        sync: false
-        # Set this to: https://ragops-api.onrender.com/api/v1
-
 databases:
   - name: ragops-db
     plan: free
