@@ -12,11 +12,11 @@ services:
       - key: DATABASE_URL
         fromDatabase:
           name: ragops-db
-          property: connectionURI
+          property: connectionString
       - key: DATABASE_SYNC_URL
         fromDatabase:
           name: ragops-db
-          property: connectionURI
+          property: connectionString
       - key: GOOGLE_API_KEY
         sync: false
       - key: QDRANT_URL
