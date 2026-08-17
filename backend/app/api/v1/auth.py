@@ -102,3 +102,38 @@ async def login(data: LoginRequest, db: DatabaseSession):
 @router.get("/me", response_model=UserResponse)
 async def get_me(user: User = Depends(get_current_user)):
     return UserResponse.from_user(user)
+
+
+class ApiKeySettings(BaseModel):
+    use_custom_key: bool
+    custom_api_key: str | None = None
+
+
+class ApiKeySettingsResponse(BaseModel):
+    use_custom_key: bool
+    has_custom_key: bool
+
+
+@router.get("/settings/api-key", response_model=ApiKeySettingsResponse)
+async def get_api_key_settings(user: User = Depends(get_current_user)):
+    return ApiKeySettingsResponse(
+        use_custom_key=user.use_custom_key,
+        has_custom_key=bool(user.custom_api_key),
+    )
+
+
+@router.put("/settings/api-key", response_model=ApiKeySettingsResponse)
+async def update_api_key_settings(
+    data: ApiKeySettings, db: DatabaseSession, user: User = Depends(get_current_user)
+):
+    user.use_custom_key = data.use_custom_key
+    if data.custom_api_key is not None:
+        user.custom_api_key = data.custom_api_key
+    if not data.use_custom_key:
+        user.custom_api_key = None
+    await db.flush()
+    await db.refresh(user)
+    return ApiKeySettingsResponse(
+        use_custom_key=user.use_custom_key,
+        has_custom_key=bool(user.custom_api_key),
+    )

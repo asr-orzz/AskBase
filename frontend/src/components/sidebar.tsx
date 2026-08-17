@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
-import { LogOut, Database, MessageSquare } from "lucide-react";
+import { LogOut, Database, MessageSquare, Settings } from "lucide-react";
 
 export function Sidebar() {
   const { data: session } = useSession();
@@ -24,6 +24,10 @@ export function Sidebar() {
         <NavLink href="/playground">
           <MessageSquare className="h-4 w-4" />
           Playground
+        </NavLink>
+        <NavLink href="/settings">
+          <Settings className="h-4 w-4" />
+          Settings
         </NavLink>
       </nav>
 

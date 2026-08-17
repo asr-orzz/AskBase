@@ -21,3 +21,5 @@ class User(BaseModel):
         default=AuthProvider.EMAIL,
         nullable=False,
     )
+    custom_api_key: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    use_custom_key: Mapped[bool] = mapped_column(default=False, nullable=False)

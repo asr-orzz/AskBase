@@ -19,9 +19,10 @@ logger = structlog.get_logger()
 
 
 class IngestionService:
-    def __init__(self, db: AsyncSession, tenant_id: uuid.UUID):
+    def __init__(self, db: AsyncSession, tenant_id: uuid.UUID, api_key: str | None = None):
         self.db = db
         self.tenant_id = tenant_id
+        self.api_key = api_key
         self.parser = DocumentParser()
 
     async def ingest_document(
@@ -33,7 +34,7 @@ class IngestionService:
         mime_type: str | None = None,
     ) -> Document:
         content_hash = xxhash.xxh64(content).hexdigest()
-        embedder = get_embedding_provider()
+        embedder = get_embedding_provider(api_key=self.api_key)
 
         doc = Document(
             tenant_id=self.tenant_id,

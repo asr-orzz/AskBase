@@ -209,11 +209,11 @@ class AnthropicLLM(LLMProvider):
 
 
 class GoogleLLM(LLMProvider):
-    def __init__(self, model: str = "gemini-2.5-flash"):
+    def __init__(self, model: str = "gemini-2.5-flash", api_key: str | None = None):
         from google import genai
 
         settings = get_settings()
-        self._genclient = genai.Client(api_key=settings.google_api_key)
+        self._genclient = genai.Client(api_key=api_key or settings.google_api_key)
         self._model = model
 
     @property
@@ -318,11 +318,12 @@ PROVIDER_DEFAULTS: dict[str, str] = {
 def get_llm_provider(
     provider: str = "openai",
     model: str | None = None,
+    api_key: str | None = None,
 ) -> LLMProvider:
     settings = get_settings()
 
     if provider == "openai" and not settings.openai_api_key:
-        if settings.google_api_key:
+        if settings.google_api_key or api_key:
             logger.warning("No OPENAI_API_KEY, falling back to Google Gemini for LLM")
             provider = "google"
             model = None
@@ -336,4 +337,6 @@ def get_llm_provider(
         raise ValueError(f"Unknown LLM provider: {provider}. Options: {list(PROVIDER_MAP)}")
 
     model = model or PROVIDER_DEFAULTS.get(provider, "")
+    if provider == "google" and api_key:
+        return cls(model=model, api_key=api_key)
     return cls(model=model)

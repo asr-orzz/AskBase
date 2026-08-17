@@ -170,11 +170,11 @@ class LocalEmbedding(EmbeddingProvider):
 class GoogleEmbedding(EmbeddingProvider):
     """Google Gemini embedding provider."""
 
-    def __init__(self, model: str = "gemini-embedding-001", dims: int = 3072):
+    def __init__(self, model: str = "gemini-embedding-001", dims: int = 3072, api_key: str | None = None):
         from google import genai
 
         settings = get_settings()
-        self._client = genai.Client(api_key=settings.google_api_key)
+        self._client = genai.Client(api_key=api_key or settings.google_api_key)
         self._model = model
         self._dims = dims
 
@@ -257,10 +257,11 @@ def get_embedding_provider(
     provider: str = "openai",
     model: str | None = None,
     dimensions: int | None = None,
+    api_key: str | None = None,
 ) -> EmbeddingProvider:
     settings = get_settings()
     if provider == "openai" and not settings.openai_api_key:
-        if settings.google_api_key:
+        if settings.google_api_key or api_key:
             logger.warning("No OPENAI_API_KEY, falling back to Google embeddings")
             provider = "google"
             model = None
@@ -277,4 +278,6 @@ def get_embedding_provider(
     model = model or defaults.get("model", "")
     dimensions = dimensions or defaults.get("dims", 3072)
 
+    if provider == "google" and api_key:
+        return cls(model=model, dims=dimensions, api_key=api_key)
     return cls(model=model, dims=dimensions)

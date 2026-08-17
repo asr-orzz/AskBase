@@ -27,6 +27,8 @@ def upgrade() -> None:
         sa.Column("name", sa.String(255), nullable=True),
         sa.Column("password_hash", sa.String(255), nullable=False),
         sa.Column("auth_provider", auth_provider, nullable=False, server_default="email"),
+        sa.Column("custom_api_key", sa.String(500), nullable=True),
+        sa.Column("use_custom_key", sa.Boolean(), nullable=False, server_default="false"),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.func.now()),
     )

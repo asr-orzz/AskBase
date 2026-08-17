@@ -26,8 +26,10 @@ async def query_knowledge_base(
     if not kb:
         raise HTTPException(status_code=404, detail="Knowledge base not found")
 
-    embedding = get_embedding_provider()
-    llm = get_llm_provider()
+    user_api_key = user.custom_api_key if user.use_custom_key else None
+
+    embedding = get_embedding_provider(api_key=user_api_key)
+    llm = get_llm_provider(api_key=user_api_key)
 
     pipeline = RAGPipeline(
         vector_store=get_vector_store(),

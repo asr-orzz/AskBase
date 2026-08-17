@@ -52,7 +52,8 @@ async def upload_document(
 
     doc_title = title or file.filename or "Untitled"
 
-    ingestion = IngestionService(db, user.id)
+    user_api_key = user.custom_api_key if user.use_custom_key else None
+    ingestion = IngestionService(db, user.id, api_key=user_api_key)
     try:
         doc = await ingestion.ingest_document(
             kb=kb,
