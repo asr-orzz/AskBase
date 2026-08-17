@@ -66,11 +66,30 @@ class FixedSizeChunker(ChunkingStrategy):
 class RecursiveChunker(ChunkingStrategy):
     """Recursively split on separators, preferring natural boundaries."""
 
-    SEPARATORS = ["\n\n", "\n", ". ", "! ", "? ", "; ", ", ", " ", ""]
+    SEPARATORS = ["\n\n\n", "\n\n", "\n", ". ", "! ", "? ", "; ", ", ", " ", ""]
 
     def chunk(self, text: str, metadata: dict | None = None) -> list[ChunkResult]:
         chunks = self._recursive_split(text, self.SEPARATORS)
-        return self._build_results(chunks, metadata)
+        enriched = self._add_overlap_context(chunks)
+        return self._build_results(enriched, metadata)
+
+    def _add_overlap_context(self, chunks: list[str]) -> list[str]:
+        """Add overlap from neighboring chunks for better retrieval context."""
+        if not chunks or self.chunk_overlap <= 0:
+            return chunks
+
+        result = []
+        for i, chunk in enumerate(chunks):
+            prefix = ""
+            suffix = ""
+            if i > 0:
+                prefix = chunks[i - 1][-self.chunk_overlap:]
+            if i < len(chunks) - 1:
+                suffix = chunks[i + 1][:self.chunk_overlap]
+
+            enriched = f"{prefix} {chunk} {suffix}".strip() if (prefix or suffix) else chunk
+            result.append(enriched)
+        return result
 
     def _recursive_split(self, text: str, separators: list[str]) -> list[str]:
         if len(text) <= self.chunk_size:

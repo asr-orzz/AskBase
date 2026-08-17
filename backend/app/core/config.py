@@ -13,7 +13,7 @@ class Settings(BaseSettings):
         extra="ignore",
     )
 
-    app_name: str = "RAGOps"
+    app_name: str = "AskBase"
     app_env: Literal["development", "staging", "production"] = "development"
     debug: bool = True
     api_prefix: str = "/api/v1"

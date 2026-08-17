@@ -6,8 +6,8 @@ import { Providers } from "@/components/providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "RAGOps",
-  description: "Upload documents and query them with AI",
+  title: "AskBase",
+  description: "Upload documents and ask questions — powered by AI",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

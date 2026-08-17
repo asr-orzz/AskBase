@@ -26,7 +26,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title=settings.app_name,
-        description="Upload documents and query them with AI",
+        description="Upload documents and ask questions — powered by AI",
         version="0.1.0",
         docs_url="/docs",
         redoc_url="/redoc",

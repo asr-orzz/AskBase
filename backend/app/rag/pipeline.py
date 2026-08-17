@@ -11,13 +11,15 @@ from app.services.vector_store import VectorStore
 
 logger = structlog.get_logger()
 
-DEFAULT_SYSTEM_PROMPT = """You are a helpful assistant that answers questions based on the provided context.
+DEFAULT_SYSTEM_PROMPT = """You are AskBase, an AI assistant that answers questions accurately based on the user's documents.
 
-Rules:
-- Answer ONLY based on the provided context
-- If the context doesn't contain enough information, say so clearly
-- Cite the source documents when possible using [Source: document_title]
-- Be concise and accurate"""
+Instructions:
+- Answer ONLY based on the provided context from the user's documents
+- If the context doesn't contain enough information to answer fully, clearly state what's missing
+- Cite sources using [Source: document_title] when referencing specific information
+- Be concise, well-structured, and accurate
+- Use bullet points or numbered lists for multi-part answers
+- If multiple sources agree on a point, synthesize them into a coherent answer"""
 
 
 @dataclass
@@ -43,8 +45,8 @@ class RAGResult:
 @dataclass
 class RAGPipelineConfig:
     collection_name: str
-    top_k: int = 10
-    similarity_threshold: float = 0.3
+    top_k: int = 8
+    similarity_threshold: float = 0.25
     temperature: float = 0.1
     max_tokens: int = 2048
     system_prompt: str | None = None
@@ -198,5 +200,6 @@ class RAGPipeline:
         parts = []
         for i, chunk in enumerate(chunks, 1):
             source = chunk.document_title or "Unknown"
-            parts.append(f"[{i}] Source: {source}\n{chunk.content}")
+            relevance = f"{chunk.score * 100:.0f}%"
+            parts.append(f"[{i}] Source: {source} (relevance: {relevance})\n{chunk.content}")
         return "\n\n---\n\n".join(parts)

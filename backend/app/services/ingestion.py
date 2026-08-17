@@ -57,7 +57,7 @@ class IngestionService:
                 await self.db.flush()
                 return doc
 
-            chunker = get_chunker("recursive", 800, 100)
+            chunker = get_chunker("recursive", 1000, 200)
             chunk_results = chunker.chunk(text, metadata={"document_id": str(doc.id)})
 
             if not chunk_results:
